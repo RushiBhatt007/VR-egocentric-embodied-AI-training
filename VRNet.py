@@ -127,10 +127,10 @@ class VRNet(nn.Module):
         return x
 
 class VRDataLoader(Dataset):
-    def __init__(self, data_dir, startRun, lastRun, batch_size=1):
+    def __init__(self, data_dir, batch_size=1):
         self.data_dir = data_dir
-        self.startRun = startRun
-        self.lastRun = lastRun
+        # self.startRun = startRun
+        # self.lastRun = lastRun
         self.batch_size = batch_size
         self.rgbTop_images, self.depthTop_images, self.rgbEff_images, self.depthEff_images, self.rgbSide_images, self.depthSide_images, self.states = self.load_data()
         self.arrayIndicies = list([i for i in range(len(self.rgbTop_images))])
@@ -147,15 +147,15 @@ class VRDataLoader(Dataset):
         depthsSide = []
         states = []
         
-        for k in range(self.lastRun - self.startRun):
-            rgbTop_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'rgb_Top')
-            depthTop_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'depth_Top')
-            rgbEff_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'rgb_Eff')
-            depthEff_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'depth_Eff')
-            rgbSide_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'rgb_Side')
-            depthSide_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'depth_Side')
+        for k in os.listdir(self.data_dir):
+            rgbTop_dir = os.path.join(self.data_dir, k, 'rgb_Top')
+            depthTop_dir = os.path.join(self.data_dir, k, 'depth_Top')
+            rgbEff_dir = os.path.join(self.data_dir, k, 'rgb_Eff')
+            depthEff_dir = os.path.join(self.data_dir, k, 'depth_Eff')
+            rgbSide_dir = os.path.join(self.data_dir, k, 'rgb_Side')
+            depthSide_dir = os.path.join(self.data_dir, k, 'depth_Side')
 
-            state_dir = os.path.join(self.data_dir, f'{k+self.startRun}', 'states')
+            state_dir = os.path.join(self.data_dir, k, 'states')
             
             state_names = os.listdir(state_dir) #get all files in the directory
             state_names = [int(state_name[6:-4]) for state_name in state_names if state_name.endswith('.csv')] #only get the csv files
@@ -290,11 +290,11 @@ class VRDataLoader(Dataset):
         print('depth std: ', depthTop_std)
         print('states mean: ', torch.mean(states, dim=0))
         print('states std: ', torch.std(states, dim=0))
-
+        
         #normalize states
         for i in range(6):
             states[:, i] = (states[:, i] - torch.mean(states[:, i])) / torch.std(states[:, i])
-
+        print(rgbsTop.shape, depthsTop.shape, rgbsEff.shape, depthsEff.shape, rgbsSide.shape, depthsSide.shape, states.shape)
         return rgbsTop, depthsTop, rgbsEff, depthsEff, rgbsSide, depthsSide, states
     
     def __len__(self):
